@@ -1,0 +1,46 @@
+{
+  "family": "eligibai-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "containerDefinitions": [
+    {
+      "name": "eligibai-backend",
+      "image": "<your-ecr-repo>/eligibai-backend:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "DATABASE_URL",
+          "value": "postgresql://eligibai:password@<db-endpoint>:5432/eligibai"
+        },
+        {
+          "name": "QDRANT_URL",
+          "value": "http://<qdrant-endpoint>:6333"
+        },
+        {
+          "name": "REDIS_URL",
+          "value": "redis://<redis-endpoint>:6379"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "value": "your_production_api_key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/eligibai-backend",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

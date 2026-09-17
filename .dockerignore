@@ -1,0 +1,58 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+venv
+env
+ENV
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+.next
+out
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Data
+data/*.json
+!data/scholarships.json
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# AWS
+.aws
+.secrets
+
+# Temporary files
+*.tmp
+*.temp
+.cache

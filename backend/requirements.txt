@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-multipart
+python-dotenv
+langchain
+langchain-openai
+langgraph
+beautifulsoup4
+httpx
+lxml
+tavily-python
+sqlalchemy
+psycopg2-binary
+google-genai

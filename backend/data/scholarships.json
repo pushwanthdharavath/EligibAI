@@ -1,0 +1,209 @@
+[
+  {
+    "id": "scholarship_001",
+    "scheme_name": "Post-Matric Scholarship for SC Students",
+    "provider": "Telangana ePASS",
+    "state": "Telangana",
+    "academic_year": "2026-27",
+    "eligibility": {
+      "education": ["B.Tech", "B.E.", "Diploma", "B.Sc", "B.Com", "B.A", "M.Tech", "M.Sc", "M.Com", "MBA"],
+      "income_max": 500000,
+      "category": ["SC"],
+      "state": ["Telangana"],
+      "disability_required": null,
+      "year_of_study": ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"]
+    },
+    "benefit": "₹50,000 per year (includes maintenance allowance, reimbursement of fees, book grant)",
+    "deadline": "31/12/2026",
+    "source_url": "https://telanganaepass.cgg.gov.in/",
+    "required_documents": ["Caste Certificate", "Income Certificate", "Aadhaar Card", "Bank Passbook", "College ID", "Marksheets"],
+    "application_process": "Apply through Telangana ePASS portal with required documents",
+    "last_updated": "2026-09-01"
+  },
+  {
+    "id": "scholarship_002",
+    "scheme_name": "Merit Cum Means Scholarship for Professional and Technical Courses",
+    "provider": "Ministry of Minority Affairs",
+    "state": null,
+    "academic_year": "2026-27",
+    "eligibility": {
+      "education": ["B.Tech", "B.E.", "M.Tech", "M.E.", "MBA", "MCA"],
+      "income_max": 250000,
+      "category": ["Muslim", "Christian", "Sikh", "Buddhist", "Parsi", "Jain"],
+      "disability_required": null,
+      "year_of_study": ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"]
+    },
+    "benefit": "Up to ₹20,000 per annum + Course fee reimbursement up to ₹20,000",
+    "deadline": "15/11/2026",
+    "source_url": "https://www.scholarships.gov.in/",
+    "required_documents": ["Minority Community Certificate", "Income Certificate", "Aadhaar Card", "Bank Passbook", "College ID", "Marksheets"],
+    "application_process": "Apply through National Scholarship Portal",
+    "last_updated": "2026-09-01"
+  },
+  {
+    "id": "scholarship_003",
+    "scheme_name": "Central Sector Scheme of Scholarships for College and University Students",
+    "provider": "Ministry of Education",
+    "state": null,
+    "academic_year": "2026-27",
+    "eligibility": {
+      "education": ["B.Tech", "B.E.", "B.Sc", "B.Com", "B.A", "M.Tech", "M.Sc", "M.Com"],
+      "income_max": 250000,
+      "category": null,
+      "disability_required": null,
+      "year_of_study": ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"]
+    },
+    "benefit": "₹12,000 per year (₹1,000 per month for 10 months) + ₹20,000 for 5th year professional courses",
+    "deadline": "31/10/2026",
+    "source_url": "https://www.scholarships.gov.in/",
+    "required_documents": ["Income Certificate", "Aadhaar Card", "Bank Passbook", "College ID", "Marksheets"],
+    "application_process": "Apply through National Scholarship Portal",
+    "last_updated": "2026-09-01"
+  },
+  {
+    "id": "scholarship_004",
+    "scheme_name": "Pragati Scholarship for Girl Students",
+    "provider": "AICTE",
+    "state": null,
+    "academic_year": "2026-27",
+    "eligibility": {
+      "education": ["B.Tech", "B.E.", "Diploma"],
+      "income_max": 800000,
+      "gender": "Female",
+      "category": null,
+      "disability_required": null,
+      "year_of_study": ["1st Year", "2nd Year", "3rd Year", "4th Year"]
+    },
+    "benefit": "₹30,000 per year + Tuition fee reimbursement up to ₹30,000",
+    "deadline": "30/11/2026",
+    "source_url": "https://www.aicte-india.org/",
+    "required_documents": ["Income Certificate", "Aadhaar Card", "Bank Passbook", "College ID", "Marksheets", "Gender Certificate"],
+    "application_process": "Apply through AICTE portal",
+    "last_updated": "2026-09-01"
+  },
+  {
+    "id": "scholarship_005",
+    "scheme_name": "Saksham Scholarship for Specially Abled Students",
+    "provider": "AICTE",
+    "state": null,
+    "academic_year": "2026-27",
+    "eligibility": {
+      "education": ["B.Tech", "B.E.", "Diploma", "M.Tech", "M.E."],
+      "income_max": 800000,
+      "disability_required": true,
+      "category": null,
+      "year_of_study": ["1st Year", "2nd Year", "3rd Year", "4th Year"]
+    },
+    "benefit": "₹50,000 per year + Tuition fee reimbursement up to ₹30,000",
+    "deadline": "30/11/2026",
+    "source_url": "https://www.aicte-india.org/",
+    "required_documents": ["Disability Certificate", "Income Certificate", "Aadhaar Card", "Bank Passbook", "College ID", "Marksheets"],
+    "application_process": "Apply through AICTE portal",
+    "last_updated": "2026-09-01"
+  },
+  {
+    "id": "scholarship_006",
+    "scheme_name": "Post-Matric Scholarship for OBC Students",
+    "provider": "Telangana ePASS",
+    "state": "Telangana",
+    "academic_year": "2026-27",
+    "eligibility": {
+      "education": ["B.Tech", "B.E.", "Diploma", "B.Sc", "B.Com", "B.A", "M.Tech", "M.Sc", "M.Com", "MBA"],
+      "income_max": 1000000,
+      "category": ["OBC"],
+      "state": ["Telangana"],
+      "disability_required": null,
+      "year_of_study": ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"]
+    },
+    "benefit": "₹30,000 per year (includes maintenance allowance, reimbursement of fees)",
+    "deadline": "31/12/2026",
+    "source_url": "https://telanganaepass.cgg.gov.in/",
+    "required_documents": ["OBC Caste Certificate", "Income Certificate", "Aadhaar Card", "Bank Passbook", "College ID", "Marksheets"],
+    "application_process": "Apply through Telangana ePASS portal with required documents",
+    "last_updated": "2026-09-01"
+  },
+  {
+    "id": "scholarship_007",
+    "scheme_name": "Post-Matric Scholarship for ST Students",
+    "provider": "Telangana ePASS",
+    "state": "Telangana",
+    "academic_year": "2026-27",
+    "eligibility": {
+      "education": ["B.Tech", "B.E.", "Diploma", "B.Sc", "B.Com", "B.A", "M.Tech", "M.Sc", "M.Com", "MBA"],
+      "income_max": 500000,
+      "category": ["ST"],
+      "state": ["Telangana"],
+      "disability_required": null,
+      "year_of_study": ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"]
+    },
+    "benefit": "₹50,000 per year (includes maintenance allowance, reimbursement of fees, book grant)",
+    "deadline": "31/12/2026",
+    "source_url": "https://telanganaepass.cgg.gov.in/",
+    "required_documents": ["Tribal Certificate", "Income Certificate", "Aadhaar Card", "Bank Passbook", "College ID", "Marksheets"],
+    "application_process": "Apply through Telangana ePASS portal with required documents",
+    "last_updated": "2026-09-01"
+  },
+  {
+    "id": "scholarship_008",
+    "scheme_name": "ISHAN UDAY for North Eastern Region",
+    "provider": "University Grants Commission (UGC)",
+    "state": null,
+    "academic_year": "2026-27",
+    "eligibility": {
+      "education": ["B.Tech", "B.E.", "B.Sc", "B.Com", "B.A", "M.Tech", "M.Sc", "M.Com", "MBA"],
+      "income_max": 4500000,
+      "category": null,
+      "state": ["Arunachal Pradesh", "Assam", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Sikkim", "Tripura"],
+      "disability_required": null,
+      "year_of_study": ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"]
+    },
+    "benefit": "₹5,400 per month for general degree, ₹7,800 per month for professional/technical courses",
+    "deadline": "15/12/2026",
+    "source_url": "https://www.ugc.ac.in/",
+    "required_documents": ["Domicile Certificate", "Income Certificate", "Aadhaar Card", "Bank Passbook", "College ID", "Marksheets"],
+    "application_process": "Apply through UGC portal",
+    "last_updated": "2026-09-01"
+  },
+  {
+    "id": "scholarship_009",
+    "scheme_name": "PG Indira Gandhi Scholarship for Single Girl Child",
+    "provider": "University Grants Commission (UGC)",
+    "state": null,
+    "academic_year": "2026-27",
+    "eligibility": {
+      "education": ["M.Tech", "M.E.", "M.Sc", "M.Com", "MBA", "M.A"],
+      "income_max": null,
+      "gender": "Female",
+      "category": null,
+      "disability_required": null,
+      "year_of_study": ["1st Year", "2nd Year"]
+    },
+    "benefit": "₹36,200 per year for 2 years",
+    "deadline": "30/11/2026",
+    "source_url": "https://www.ugc.ac.in/",
+    "required_documents": ["Single Girl Child Certificate", "Aadhaar Card", "Bank Passbook", "College ID", "Marksheets"],
+    "application_process": "Apply through UGC portal",
+    "last_updated": "2026-09-01"
+  },
+  {
+    "id": "scholarship_010",
+    "scheme_name": "Karnataka State Scholarship for SC/ST",
+    "provider": "Karnataka ePASS",
+    "state": "Karnataka",
+    "academic_year": "2026-27",
+    "eligibility": {
+      "education": ["B.Tech", "B.E.", "Diploma", "B.Sc", "B.Com", "B.A", "M.Tech", "M.Sc", "M.Com", "MBA"],
+      "income_max": 250000,
+      "category": ["SC", "ST"],
+      "state": ["Karnataka"],
+      "disability_required": null,
+      "year_of_study": ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"]
+    },
+    "benefit": "₹35,000 per year + Full fee reimbursement",
+    "deadline": "30/11/2026",
+    "source_url": "https://karepass.cgg.gov.in/",
+    "required_documents": ["Caste Certificate", "Income Certificate", "Aadhaar Card", "Bank Passbook", "College ID", "Marksheets"],
+    "application_process": "Apply through Karnataka ePASS portal",
+    "last_updated": "2026-09-01"
+  }
+]
