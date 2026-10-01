@@ -83,7 +83,7 @@ export default function UserProfileForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          query: profile.searchQuery,
+          query: `${profile.state} ${profile.category} ${profile.course} scholarship eligibility application`,
           profile: profile,
           max_results: 20,
         }),
