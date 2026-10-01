@@ -83,7 +83,7 @@ export default function UserProfileForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          query: `${profile.state} ${profile.category} ${profile.course} scholarship eligibility application`,
+          query: profile.searchQuery,
           profile: profile,
           max_results: 20,
         }),
@@ -108,14 +108,29 @@ export default function UserProfileForm() {
           pipeline_summary: data.pipeline_summary || null,
           search_results: data.search_results || [],
           results: data.results?.filter((result: any) => {
-          // Basic validation only
-          const title = result.scholarship_name || result.title || "";
-          const description = result.benefits || "";
+          // Filter out results with garbage content
+          const title = (result.scholarship_name || result.title || "").toLowerCase();
+          const description = (result.benefits || "").toLowerCase();
           
-          // Just check if title exists and is reasonable
-          const hasValidTitle = title && title.length > 3 && title.length < 500;
+          // Skip results with image references, OTR, URL paths, etc.
+          const garbagePatterns = [
+            "image 1:", "image 2:", "image 3:", "image 4:", "image 5:",
+            "otr registration", "one time registration",
+            "/en/", "/fresh/", "/public/", "/scheme",
+            "0-", "-0", "may 17, 2022", "2022", "2023", "2024", "2025"
+          ];
           
-          return hasValidTitle;
+          const hasGarbage = garbagePatterns.some(pattern => 
+            title.includes(pattern) || description.includes(pattern)
+          );
+          
+          if (hasGarbage) return false;
+          
+          // Basic validation
+          const hasValidTitle = title && title.length > 5 && title.length < 200;
+          const hasValidDescription = description && description.length > 20;
+          
+          return hasValidTitle && hasValidDescription;
         }).map((result: any) => ({
             title: result.scholarship_name || result.title || "Untitled Scholarship",
             description: result.benefits || "Visit the official portal for detailed benefit information",
