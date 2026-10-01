@@ -516,9 +516,23 @@ async def orchestrate_scholarship_search(request: SearchRequest):
         
         print(f"[SIMPLIFIED ORCHESTRATION] Tavily returned {len(results)} results")
         
+        # Filter out non-scholarship sites
+        excluded_domains = [
+            "facebook.com", "instagram.com", "youtube.com", "twitter.com", "x.com", "tiktok.com", "linkedin.com",  # Social media
+            "findagrave.com",  # Cemeteries
+            "merriam-webster.com",  # Dictionaries
+            "wikipedia.org", "wikivoyage.org", "britannica.com",  # Encyclopedias
+            "salemgastro.com", "cityofsalem.net",  # Random businesses
+        ]
+        
         # Return raw results without strict filtering
         final_results = []
         for result in results:
+            url = result.get("url", "")
+            is_excluded = any(domain in url for domain in excluded_domains)
+            if is_excluded:
+                print(f"[SIMPLIFIED ORCHESTRATION] Skipping excluded domain: {url}")
+                continue
             snippet = result.get("snippet", "Visit source for details")
             title = result.get("title", "Scholarship")
             
