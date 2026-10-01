@@ -77,7 +77,7 @@ export default function UserProfileForm() {
     }, 200);
     
     try {
-      const response = await fetch("http://localhost:8000/api/tavily/orchestrate", {
+      const response = await fetch("http://13.62.229.119:8000/api/tavily/orchestrate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
