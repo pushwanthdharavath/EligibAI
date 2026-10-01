@@ -22,7 +22,16 @@ class TavilySearchService:
             "www.ugc.ac.in",  # UGC
             "www.myscheme.gov.in",  # myScheme
             "www.education.gov.in",  # Ministry of Education
-            "www.socialjustice.gov.in"  # Ministry of Social Justice
+            "www.socialjustice.gov.in",  # Ministry of Social Justice
+        ]
+        
+        # Exclude non-scholarship sites
+        self.excluded_domains = [
+            "facebook.com", "instagram.com", "youtube.com", "twitter.com", "x.com", "tiktok.com", "linkedin.com",
+            "findagrave.com",
+            "merriam-webster.com",
+            "wikipedia.org", "wiktionary.org", "wikivoyage.org", "britannica.com",
+            "salemgastro.com", "cityofsalem.net",
         ]
     
     def search_scholarships(
@@ -68,6 +77,12 @@ class TavilySearchService:
                 
                 # Skip GitHub and code repositories - they don't contain scholarship info
                 if "github.com" in url or "gitlab.com" in url or "bitbucket.org" in url:
+                    continue
+                
+                # Skip excluded domains (social media, dictionaries, etc.)
+                is_excluded = any(domain in url for domain in self.excluded_domains)
+                if is_excluded:
+                    print(f"[TAVILY SEARCH] Skipping excluded domain: {url}")
                     continue
                 
                 is_official = self._is_official_domain(url)
@@ -147,86 +162,14 @@ class TavilySearchService:
         # Check official domains first
         for domain in self.official_domains:
             if domain in url:
-                return domain.replace("www.", "").replace(".gov.in", "").replace(".org", "")
+                return domain.replace("www.", "")
         
-        # Handle common non-official but reliable sources
-        if "buddy4study.com" in url:
-            return "Buddy4Study"
-        elif "collegedunia.com" in url:
-            return "CollegeDunia"
-        elif "scholarships360.com" in url:
-            return "Scholarships360"
-        elif "vidyavision.com" in url:
-            return "Vidyavision"
-        elif "wemakescholars.com" in url:
-            return "WeMakeScholars"
-        elif "iare.ac.in" in url:
-            return "IARE"
-        elif "saitm.ac.in" in url:
-            return "SAITM"
-        else:
-            # Extract domain name as fallback
-            try:
-                from urllib.parse import urlparse
-                parsed = urlparse(url)
-                domain = parsed.netloc.replace("www.", "")
-                # Return the main domain part
-                return domain.split(".")[0].capitalize()
-            except:
-                return "Other Source"
-    
-    def search_by_source(
-        self, 
-        source: str, 
-        query: str, 
-        max_results: int = 5
-    ) -> List[Dict[str, Any]]:
-        """
-        Search a specific official source for scholarships.
+        # Try to extract domain from URL
+        parsed = urlparse(url)
+        domain = parsed.netloc
         
-        Args:
-            source: Source name (e.g., "NSP", "ePASS", "AICTE")
-            query: Search query
-            max_results: Maximum results
-            
-        Returns:
-            Results from specific source
-        """
-        try:
-            # Map source names to domains
-            source_domains = {
-                "NSP": "scholarships.gov.in",
-                "ePASS": "telanganaepass.cgg.gov.in",
-                "AICTE": "www.aicte-india.org",
-                "UGC": "www.ugc.ac.in",
-                "myScheme": "www.myscheme.gov.in"
-            }
-            
-            domain = source_domains.get(source)
-            if not domain:
-                return []
-            
-            search_result = self.client.search(
-                query=query,
-                search_depth="advanced",
-                max_results=max_results,
-                include_domains=[domain],
-                days=30
-            )
-            
-            results = []
-            for result in search_result.get("results", []):
-                results.append({
-                    "title": result.get("title"),
-                    "url": result.get("url"),
-                    "snippet": result.get("content"),
-                    "source": source,
-                    "score": result.get("score", 0),
-                    "searched_at": datetime.now().isoformat()
-                })
-            
-            return results
-            
-        except Exception as e:
-            print(f"Source-specific search error: {e}")
-            return []
+        # Remove www. prefix
+        if domain.startswith("www."):
+            domain = domain[4:]
+        
+        return domain

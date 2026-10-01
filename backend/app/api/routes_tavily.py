@@ -498,77 +498,35 @@ async def check_single_eligibility(scholarship: Dict[str, Any], user_profile: Di
 @router.post("/orchestrate")
 async def orchestrate_scholarship_search(request: SearchRequest):
     """
-    Simplified endpoint that returns raw Tavily search results directly.
-    Skip extraction and just return the search results with basic metadata.
+    Full orchestration pipeline with Tavily Extract, Gemini LLM, and eligibility checking.
     """
     try:
-        print(f"[SIMPLIFIED ORCHESTRATION] Request received: query={request.query}, max_results={request.max_results}")
+        from app.agents.scholarship_orchestrator import ScholarshipOrchestrator
         
-        # Direct Tavily search
-        from app.services.tavily_search import TavilySearchService
-        tavily_search = TavilySearchService()
+        print(f"[FULL ORCHESTRATION] Request received: query={request.query}")
         
-        results = tavily_search.search_scholarships(
+        orchestrator = ScholarshipOrchestrator()
+        result = orchestrator.run(
             query=request.query,
-            profile=request.profile,
+            user_profile=request.profile,
             max_results=request.max_results
         )
         
-        print(f"[SIMPLIFIED ORCHESTRATION] Tavily returned {len(results)} results")
-        
-        # Filter out non-scholarship sites
-        excluded_domains = [
-            "facebook.com", "instagram.com", "youtube.com", "twitter.com", "x.com", "tiktok.com", "linkedin.com",  # Social media
-            "findagrave.com",  # Cemeteries
-            "merriam-webster.com",  # Dictionaries
-            "wikipedia.org", "wikivoyage.org", "britannica.com",  # Encyclopedias
-            "salemgastro.com", "cityofsalem.net",  # Random businesses
-        ]
-        
-        # Return raw results without strict filtering
-        final_results = []
-        for result in results:
-            url = result.get("url", "")
-            is_excluded = any(domain in url for domain in excluded_domains)
-            if is_excluded:
-                print(f"[SIMPLIFIED ORCHESTRATION] Skipping excluded domain: {url}")
-                continue
-            snippet = result.get("snippet", "Visit source for details")
-            title = result.get("title", "Scholarship")
-            
-            if snippet and len(snippet) > 300:
-                snippet = snippet[:300] + "..."
-            
-            scholarship_data = {
-                "scholarship_name": title,
-                "provider": result.get("source", "Unknown"),
-                "benefits": snippet,
-                "deadline": "Visit source for deadline",
-                "source_url": result.get("url"),
-                "is_official": result.get("is_official", False),
-                "eligibility": {
-                    "overall_status": "NEEDS_MORE_INFORMATION",
-                    "explanation": "Visit source for eligibility details"
-                }
-            }
-            final_results.append(scholarship_data)
-        
-        print(f"[SIMPLIFIED ORCHESTRATION] Returning {len(final_results)} final results")
+        print(f"[FULL ORCHESTRATION] Completed: {len(result.get('results', []))} results")
         
         return {
             "success": True,
             "query": request.query,
-            "results": final_results,
-            "search_results": results,
+            "results": result.get("results", []),
             "pipeline_summary": {
-                "search_results": len(results),
-                "extraction_skipped": True,
-                "using_raw_search": True
+                "search_results": len(result.get("search_results", [])),
+                "extraction_skipped": False,
+                "using_raw_search": False
             }
         }
         
     except Exception as e:
-        print(f"[SIMPLIFIED ORCHESTRATION] Error: {e}")
+        print(f"[FULL ORCHESTRATION] Error: {e}")
         raise HTTPException(status_code=500, detail=f"Orchestration failed: {str(e)}")
 
 class TestExtractionRequest(BaseModel):

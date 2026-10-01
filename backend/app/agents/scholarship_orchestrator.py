@@ -58,7 +58,7 @@ class ScholarshipOrchestrator:
     def __init__(self):
         self.tavily_search = TavilySearchService()
         self.tavily_extract = TavilyExtractService()
-        self.llm_extraction = LLMExtractionService(force_mock=True)  # Force mock to avoid quota issues
+        self.llm_extraction = LLMExtractionService(force_mock=False)  # Use real LLM (prefer OpenAI if Gemini unavailable)
         self.eligibility_engine = eligibility_engine_v2
         
         # Build the graph

@@ -5,6 +5,9 @@ import sys
 import os
 from pathlib import Path
 
+# Force unbuffered output to see logs immediately
+os.environ["PYTHONUNBUFFERED"] = "1"
+
 # Add the parent directory to the path to import from other modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

@@ -84,6 +84,12 @@ class EligibilityEngineV2:
                 evidence=evidence
             )
         
+        # Convert string to list if needed
+        if isinstance(required_courses, str):
+            required_courses = [required_courses]
+        if isinstance(required_levels, str):
+            required_levels = [required_levels]
+        
         user_edu_normalized = self.normalize_education(user_education)
         
         # Check courses
@@ -103,6 +109,9 @@ class EligibilityEngineV2:
         
         # Check education levels
         if required_levels:
+            # Convert string to list if needed
+            if isinstance(required_levels, str):
+                required_levels = [required_levels]
             for level in required_levels:
                 if level in self.education_mapping:
                     if user_education in self.education_mapping[level]:
@@ -127,7 +136,7 @@ class EligibilityEngineV2:
     def compare_income(self, user_income: int, income_limit: Optional[Dict[str, Any]], 
                       evidence: Optional[str] = None) -> FieldComparison:
         """Compare user income against income limits."""
-        if not income_limit:
+        if not income_limit or not isinstance(income_limit, dict):
             return FieldComparison(
                 field_name="income",
                 status=ComparisonStatus.NOT_SPECIFIED,
@@ -202,6 +211,10 @@ class EligibilityEngineV2:
                 evidence=evidence
             )
         
+        # Convert string to list if needed
+        if isinstance(required_categories, str):
+            required_categories = [required_categories]
+        
         # Normalize categories for comparison
         user_cat_normalized = user_category.upper()
         required_normalized = [c.upper() for c in required_categories]
@@ -237,6 +250,10 @@ class EligibilityEngineV2:
                 required_value=None,
                 evidence=evidence
             )
+        
+        # Convert list to string if needed
+        if isinstance(required_state, list):
+            required_state = required_state[0] if required_state else ""
         
         if user_state.lower() == required_state.lower():
             return FieldComparison(
@@ -401,6 +418,10 @@ class EligibilityEngineV2:
                 evidence=evidence
             )
         
+        # Convert string to list if needed
+        if isinstance(required_years, str):
+            required_years = [required_years]
+        
         if user_year in required_years:
             return FieldComparison(
                 field_name="year_of_study",
@@ -455,6 +476,10 @@ class EligibilityEngineV2:
         source_url = scholarship_data.get("source_url", "")
         evidence_snippets = scholarship_data.get("evidence_snippets", [])
         
+        # Ensure evidence_snippets is a list
+        if not isinstance(evidence_snippets, list):
+            evidence_snippets = []
+        
         # Build evidence for each field
         def get_evidence_for_field(field_keywords: List[str]) -> Optional[str]:
             """Find evidence snippet containing field keywords."""
@@ -464,7 +489,8 @@ class EligibilityEngineV2:
             return None
         
         # Compare each field
-        comparisons = [
+        try:
+            comparisons = [
             self.compare_education(
                 user_education,
                 scholarship_data.get("course"),
@@ -507,6 +533,12 @@ class EligibilityEngineV2:
                 get_evidence_for_field(["year", "semester", "study"])
             )
         ]
+        
+        except Exception as e:
+            print(f"[ELIGIBILITY ENGINE] Error during comparisons: {e}")
+            import traceback
+            traceback.print_exc()
+            comparisons = []
         
         # Count statuses
         mismatches = [c for c in comparisons if c.status == ComparisonStatus.MISMATCH]
