@@ -21,17 +21,86 @@
 
 ---
 
+### 2. Backend Fixes Applied ✅
+
+**Files Updated:**
+- `backend/app/services/eligibility_engine_v2.py` - String-to-list conversions, error handling
+- `backend/app/services/tavily_search.py` - Domain filtering for social media, dictionaries
+- `backend/app/api/routes_tavily.py` - Fixed API route to return correct results key
+- `backend/main.py` - Unbuffered output for logs
+- `backend/app/agents/scholarship_orchestrator.py` - Full orchestration enabled
+
+**Key Changes:**
+- Added string-to-list conversion for category, education, year, state comparisons
+- Added domain filtering to exclude Facebook, Instagram, Wikipedia, etc.
+- Fixed API route to return "results" instead of "final_results"
+- Added full traceback logging for eligibility engine errors
+- Enabled full orchestration pipeline (not simplified)
+
+---
+
+**File:** `frontend/src/components/UserProfileForm.tsx`
+
+**Change:**
+- Before: `http://localhost:8000/api/tavily/orchestrate`
+- After: `http://13.62.229.119:8000/api/tavily/orchestrate`
+
+---
+
 ## Deployment Steps
 
-### Step 1: Rebuild and Push Frontend Image
+### Step 1: Commit All Changes on Windows
 
 **On Windows:**
 
 ```bash
 cd C:\Users\DELL\Desktop\eligiblAI
-git add frontend/src/components/UserProfileForm.tsx
-git commit -m "Update frontend API URL to EC2 IP for production"
+git add .
+git commit -m "Deploy to EC2: frontend API URL fix, backend eligibility fixes, Tavily domain filtering"
 git push origin main
+```
+
+This will commit:
+- Frontend API URL change (localhost → EC2 IP)
+- Frontend query construction improvement
+- Backend eligibility engine fixes (string-to-list conversions)
+- Backend Tavily domain filtering
+- Backend API route fix
+- Backend unbuffered output
+
+---
+
+### Step 2: Update Backend Code on EC2
+
+**On EC2:**
+
+```bash
+cd ~/EligibAI/backend
+git pull origin main
+```
+
+---
+
+### Step 3: Restart Backend on EC2
+
+**On EC2:**
+
+```bash
+pkill -f "python3 main.py"
+cd ~/EligibAI/backend
+nohup python3 main.py > backend.log 2>&1 &
+```
+
+---
+
+### Step 4: Rebuild and Push Frontend Image
+
+**On Windows:**
+
+```bash
+cd C:\Users\DELL\Desktop\eligiblAI\frontend
+docker build -t pushwanthdharavath/eligibai-frontend:latest .
+docker push pushwanthdharavath/eligibai-frontend:latest
 ```
 
 ```bash
@@ -42,7 +111,7 @@ docker push pushwanthdharavath/eligibai-frontend:latest
 
 ---
 
-### Step 2: Pull and Restart Frontend on EC2
+### Step 5: Pull and Restart Frontend on EC2
 
 **On EC2:**
 
@@ -55,7 +124,7 @@ docker run -d -p 3000:3000 --name frontend pushwanthdharavath/eligibai-frontend:
 
 ---
 
-### Step 3: Verify Backend is Running on EC2
+### Step 6: Verify Backend is Running on EC2
 
 **On EC2:**
 
@@ -74,7 +143,7 @@ nohup python3 main.py > backend.log 2>&1 &
 
 ---
 
-### Step 4: Test Application
+### Step 7: Test Application
 
 **In Browser:**
 
@@ -87,19 +156,21 @@ nohup python3 main.py > backend.log 2>&1 &
 
 ## Recommended Deployment Strategy
 
-### Option A: Direct Execution (Current - Recommended for Small Instance)
+### ✅ Recommended: Docker Frontend + Direct Backend (No Cost)
 
 **Frontend:** Docker container
 **Backend:** Direct Python execution (not Docker)
 
 **Pros:**
-- Saves disk space (no backend Docker image)
-- Faster deployment
-- Works with 8GB disk
+- ✅ Saves disk space (no backend Docker image)
+- ✅ Faster deployment
+- ✅ Works with 8GB disk
+- ✅ No additional AWS cost
+- ✅ Reliable and tested
 
 **Cons:**
-- Inconsistent deployment method
-- Harder to scale
+- ⚠️ Inconsistent deployment method (Docker vs direct)
+- ⚠️ Harder to scale in future
 
 **Commands:**
 
@@ -114,19 +185,24 @@ docker run -d -p 3000:3000 --name frontend pushwanthdharavath/eligibai-frontend:
 
 ---
 
-### Option B: Full Docker (Not Recommended with 8GB Disk)
+### 🔮 Future Option: Full Docker (Requires EBS Resize)
 
 **Frontend:** Docker container
 **Backend:** Docker container
 
 **Pros:**
-- Consistent deployment
-- Easier to scale
-- Better isolation
+- ✅ Consistent deployment
+- ✅ Easier to scale
+- ✅ Better isolation
 
 **Cons:**
-- Requires more disk space (backend image ~3GB)
-- 8GB disk is too small
+- ❌ Requires more disk space (backend image ~3GB)
+- ❌ 8GB disk is too small
+- ❌ Costs ~$1-2/month extra for 20GB EBS
+
+**Requirements:**
+- Resize EBS from 8GB to 20GB
+- Then use Docker for both
 
 **Commands:**
 
@@ -140,7 +216,7 @@ docker run -d -p 3000:3000 --name frontend pushwanthdharavath/eligibai-frontend:
 
 ---
 
-### Option C: Resize EBS Volume (Recommended for Full Docker)
+### 📋 How to Resize EBS (For Future Full Docker Deployment)
 
 **Steps:**
 
@@ -262,14 +338,44 @@ docker system df
 
 ## Summary
 
-**Recommended Deployment for 8GB Disk:**
-- Frontend: Docker container
-- Backend: Direct Python execution
-- API Keys: Production keys
-- Security: SSL with Let's Encrypt
+### ✅ Recommended Deployment (Current - No Cost)
 
-**Future Improvements:**
-- Resize EBS to 20GB+
-- Use full Docker deployment
-- Add monitoring (Prometheus/Grafana)
-- Add auto-scaling
+**For 8GB EC2 Instance:**
+- **Frontend:** Docker container
+- **Backend:** Direct Python execution
+- **API Keys:** Development keys (upgrade to production later)
+- **Security:** Basic (add SSL later)
+- **Cost:** $0 additional (uses existing t3.micro)
+
+**Why This Approach:**
+- Works with current 8GB disk
+- No additional AWS cost
+- Reliable and tested
+- Fast deployment
+
+---
+
+### 🔮 Future Upgrade Path (When Ready)
+
+**For Production Scaling:**
+- **Resize EBS:** 8GB → 20GB (~$1-2/month)
+- **Deployment:** Full Docker (both frontend and backend)
+- **API Keys:** Production Gemini/OpenAI keys
+- **Security:** SSL with Let's Encrypt
+- **Monitoring:** Add Prometheus/Grafana
+- **Auto-scaling:** Add load balancer
+
+**Estimated Cost:** ~$10-20/month (t3.micro + 20GB EBS + API usage)
+
+---
+
+### 🎯 Immediate Action Items
+
+1. ✅ **Commit and push all changes** (Windows)
+2. ✅ **Update backend on EC2** (git pull)
+3. ✅ **Restart backend on EC2** (direct Python)
+4. ✅ **Build and push frontend image** (Windows)
+5. ✅ **Pull and restart frontend on EC2** (Docker)
+6. ✅ **Test application** (browser)
+
+**No EBS resize needed for now.**
