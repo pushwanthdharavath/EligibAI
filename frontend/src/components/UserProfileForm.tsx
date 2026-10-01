@@ -77,8 +77,7 @@ export default function UserProfileForm() {
     }, 200);
     
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/api/tavily/orchestrate`, {
+      const response = await fetch("http://13.62.229.119:8000/api/tavily/orchestrate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
