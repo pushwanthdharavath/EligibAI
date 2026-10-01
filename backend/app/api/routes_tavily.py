@@ -516,72 +516,14 @@ async def orchestrate_scholarship_search(request: SearchRequest):
         
         print(f"[SIMPLIFIED ORCHESTRATION] Tavily returned {len(results)} results")
         
-        # Filter out results with navigation/menu garbage
-        navigation_keywords = [
-            "Menu", "About Us", "Contact Us", "Site Map", "RTI Manual", 
-            "Dashboard Login", "Login", "logo", "A+;)", "A;)", "A-;)",
-            "Schemes & Policies", "Awards", "Link", "Footer", "Privacy Policy",
-            "Terms of Service", "Copyright", "All rights reserved",
-            "Rising-2047", "tg rising", "ts logo", "Official Login",
-            "Dashboard", "RSSing", "chan-", "all_p2",
-            "Image 1:", "Image 2:", "Image 3:", "Image 4:", "Image 5:",
-            "Image", "OTR registration", "One Time Registration",
-            "/en/", "/fresh/", "/public/", "/scheme", "0-", "-0",
-            "##", "###", "#", "|", "---", "Also Check", "FAQs", "Ques", "Ans",
-            "[PDF]", "Scheme Guidelines of Scheme", "General Overview",
-            "Salary for Freshers", "Steps to Apply", "Top"
-        ]
-        
-        # Filter out low-quality domains
-        low_quality_domains = [
-            "rssing.com", "noticebard.com", "theglobalscholarship.org", "quora.com",
-            "shiksha.com", "collegedunia.com", "manabadi.co.in", "saitm.ac.in"
-        ]
-        
-        # Add basic metadata to each result
+        # Return raw results without strict filtering
         final_results = []
         for result in results:
-            # Use Tavily's title and snippet directly
             snippet = result.get("snippet", "Visit source for details")
             title = result.get("title", "Scholarship")
             
-            # Skip if snippet contains navigation menu garbage
-            snippet_lower = snippet.lower() if snippet else ""
-            title_lower = title.lower() if title else ""
-            
-            has_navigation = any(
-                keyword.lower() in snippet_lower or keyword.lower() in title_lower
-                for keyword in navigation_keywords
-            )
-            
-            # Skip if snippet is too short or doesn't contain scholarship-related words
-            scholarship_keywords = ["scholarship", "grant", "fellowship", "financial aid", "reimbursement", "fee", "eligible", "eligibility", "income", "students", "education"]
-            has_scholarship_content = any(
-                keyword in snippet_lower or keyword in title_lower
-                for keyword in scholarship_keywords
-            )
-            
-            # Skip if snippet is just navigation or too short
-            if has_navigation or (len(snippet) < 50 and not has_scholarship_content):
-                print(f"[SIMPLIFIED ORCHESTRATION] Skipping navigation/short result: {title[:50]}")
-                continue
-            
-            # Skip low-quality domains
-            url = result.get("url", "")
-            is_low_quality = any(domain in url for domain in low_quality_domains)
-            if is_low_quality:
-                print(f"[SIMPLIFIED ORCHESTRATION] Skipping low-quality domain: {url}")
-                continue
-            
-            # Skip results with old dates (not 2026)
-            old_years = ["2020", "2021", "2022", "2023", "2024", "2025"]
-            has_old_date = any(year in snippet_lower or year in title_lower for year in old_years)
-            if has_old_date:
-                print(f"[SIMPLIFIED ORCHESTRATION] Skipping old date result: {title[:50]}")
-                continue
-            
-            if snippet and len(snippet) > 200:
-                snippet = snippet[:200] + "..."
+            if snippet and len(snippet) > 300:
+                snippet = snippet[:300] + "..."
             
             scholarship_data = {
                 "scholarship_name": title,
