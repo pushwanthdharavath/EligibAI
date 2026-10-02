@@ -514,6 +514,15 @@ To apply:
                                     ? "🔵 " + (result.source || "Aggregator")
                                     : "🟢 " + (result.source || "Government Portal")}
                                 </span>
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                  result.extraction_method === "gemini"
+                                    ? "bg-purple-100 text-purple-800"
+                                    : "bg-yellow-100 text-yellow-800"
+                                }`}>
+                                  {result.extraction_method === "gemini"
+                                    ? "✨ AI Extracted"
+                                    : "⚠️ Mock Extracted"}
+                                </span>
                               </div>
                               <h3 className="text-xl font-bold text-gray-900 mb-2">
                                 {result.title || "Untitled Scholarship"}
