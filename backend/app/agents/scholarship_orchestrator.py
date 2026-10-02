@@ -209,11 +209,20 @@ class ScholarshipOrchestrator:
                             print(f"[ORCHESTRATOR] Skipping extraction with no scholarship name from {extraction['url']}")
                             skipped_count += 1
                             continue
+                        # Add extraction method indicator
+                        extraction_meta = result.get("extraction_metadata", {})
+                        model_used = extraction_meta.get("model_used", "unknown")
+                        if model_used == "gemini-3.6-flash":
+                            scholarship["extraction_method"] = "gemini"
+                            scholarship["extraction_confidence"] = "high"
+                        else:
+                            scholarship["extraction_method"] = "mock"
+                            scholarship["extraction_confidence"] = "low"
                         # Preserve is_official status from search results
                         if i < len(search_results):
                             scholarship["is_official"] = search_results[i].get("is_official", True)
                         structured_scholarships.append(scholarship)
-                        extraction_metadata.append(result.get("extraction_metadata"))
+                        extraction_metadata.append(extraction_meta)
                     else:
                         print(f"[ORCHESTRATOR] Extraction failed for {extraction['url']}: {result.get('error')}")
                         skipped_count += 1

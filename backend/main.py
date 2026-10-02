@@ -112,10 +112,12 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
+    # Disable reload in production (check if running in production environment)
+    is_production = os.environ.get("ENVIRONMENT") == "production"
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,
+        reload=not is_production,
         log_level="info"
     )
