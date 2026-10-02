@@ -3,10 +3,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import sys
 import os
+import logging
 from pathlib import Path
 
 # Force unbuffered output to see logs immediately
 os.environ["PYTHONUNBUFFERED"] = "1"
+
+# Configure logging to both console and file
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('backend.log')
+    ]
+)
 
 # Add the parent directory to the path to import from other modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -105,5 +116,6 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True
+        reload=True,
+        log_level="info"
     )

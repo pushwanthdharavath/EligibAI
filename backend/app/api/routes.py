@@ -8,7 +8,7 @@ from app.services.eligibility_engine import EligibilityEngine
 from app.services.eligibility_engine_v2 import eligibility_engine_v2
 # Static dataset removed - using live web search via LangGraph orchestrator
 # from app.services.scholarship_dataset import ScholarshipDataset
-from app.services.llm_service import LLMService
+# from app.services.llm_service import LLMService
 # Old agent deprecated - using LangGraph orchestrator instead
 # from app.agents.scholarship_agent import run_agent_query
 import json
@@ -20,7 +20,8 @@ router = APIRouter()
 eligibility_engine = EligibilityEngine()
 # Static dataset removed - using live web search via LangGraph orchestrator
 # scholarship_dataset = ScholarshipDataset()
-llm_service = LLMService()
+# LLM service deprecated - using llm_extraction service instead
+# llm_service = LLMService()
 
 class SearchRequest(BaseModel):
     query: str

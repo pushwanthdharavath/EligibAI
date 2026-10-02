@@ -36,44 +36,13 @@ class LLMExtractionService:
                 traceback.print_exc()
                 self.use_gemini = False
         
-        # Fallback to OpenAI if Gemini not available AND not forced to mock
-        if not self.use_gemini and not self.force_mock:
-            self.has_openai_key = (
-                settings.OPENAI_API_KEY and 
-                settings.OPENAI_API_KEY != "your_openai_api_key_here" and
-                "your_" not in settings.OPENAI_API_KEY and
-                "sk-" in settings.OPENAI_API_KEY  # Valid OpenAI keys start with sk-
-            )
-            
-            if self.has_openai_key:
-                try:
-                    self.client = OpenAI(
-                        api_key=settings.OPENAI_API_KEY,
-                        base_url=settings.OPENAI_BASE_URL if hasattr(settings, 'OPENAI_BASE_URL') else None
-                    )
-                    self.model = settings.MODEL_NAME if hasattr(settings, 'MODEL_NAME') else "gpt-4o-mini"
-                    print("Using OpenAI for LLM extraction")
-                except Exception as e:
-                    print(f"Failed to initialize OpenAI client: {e}")
-                    self.has_openai_key = False
-            else:
-                self.has_openai_key = False
+        # Initialize mock service as fallback in case Gemini fails
+        from app.services.llm_extraction_mock import MockLLMExtractionService
+        self.mock_service = MockLLMExtractionService()
+        if self.force_mock:
+            print("FORCE MOCK MODE: Using mock extraction service exclusively")
         else:
-            self.has_openai_key = False
-        
-        # Final fallback to mock service
-        if not self.use_gemini and not self.has_openai_key:
-            from app.services.llm_extraction_mock import MockLLMExtractionService
-            self.mock_service = MockLLMExtractionService()
-            print("Warning: No valid LLM API key found. Using mock extraction service.")
-        else:
-            # Initialize mock service as fallback in case LLM fails
-            from app.services.llm_extraction_mock import MockLLMExtractionService
-            self.mock_service = MockLLMExtractionService()
-            if self.force_mock:
-                print("FORCE MOCK MODE: Using mock extraction service exclusively")
-            else:
-                print("Gemini service initialized with fallback to mock service")
+            print("Gemini service initialized with fallback to mock service")
     
     def extract_scholarship(
         self,
@@ -107,52 +76,11 @@ class LLMExtractionService:
                 return result
             except Exception as e:
                 print(f"Gemini extraction error: {e}")
-                print("Falling back to OpenAI or mock extraction")
+                print("Falling back to mock extraction")
+                return self.mock_service.extract_scholarship(content, source_url, source_domain)
         
-        # Try OpenAI if Gemini not available
-        if self.has_openai_key:
-            try:
-                extraction_prompt = self._build_extraction_prompt(content, source_url)
-                
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": self._get_system_prompt()
-                        },
-                        {
-                            "role": "user",
-                            "content": extraction_prompt
-                        }
-                    ],
-                    temperature=0.1,  # Low temperature for consistent extraction
-                    response_format={"type": "json_object"}
-                )
-                
-                extracted_json = json.loads(response.choices[0].message.content)
-                
-                # Validate and structure the extraction
-                scholarship_data = self._process_extraction(extracted_json, source_url, source_domain)
-                
-                return {
-                    "success": True,
-                    "scholarship": scholarship_data,
-                    "extraction_metadata": {
-                        "content_length": len(content),
-                        "content_word_count": len(content.split()),
-                        "extraction_time": datetime.now().isoformat(),
-                        "model_used": self.model,
-                        "tokens_used": response.usage.total_tokens if hasattr(response, 'usage') else None
-                    }
-                }
-                
-            except Exception as e:
-                print(f"OpenAI extraction error: {e}")
-                # Fallback to mock if OpenAI fails
-                print("Falling back to mock extraction service")
-        
-        # Final fallback to mock service
+        # If Gemini is not available, use mock directly
+        print("Gemini not available - using mock extraction")
         return self.mock_service.extract_scholarship(content, source_url, source_domain)
     
     def _get_system_prompt(self) -> str:

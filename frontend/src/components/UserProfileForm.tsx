@@ -532,54 +532,6 @@ To apply:
                                 </div>
                               )}
                               
-                              {result.field_comparisons && result.field_comparisons.length > 0 && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                                  <p className="text-xs text-blue-800 font-medium mb-2">📊 Field-by-Field Comparison:</p>
-                                  <div className="space-y-1">
-                                    {result.field_comparisons.map((field: FieldComparison, idx: number) => (
-                                      <div key={idx} className="text-xs text-blue-700">
-                                        <span className={`font-medium ${
-                                          field.status === "MATCH" ? "text-green-700" :
-                                          field.status === "MISMATCH" ? "text-red-700" :
-                                          "text-gray-600"
-                                        }`}>
-                                          {field.status === "MATCH" ? "✓" : field.status === "MISMATCH" ? "✗" : "?"} {field.field}:
-                                        </span>
-                                        {" "}{field.reason}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {result.evidence && (
-                                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-3">
-                                  <p className="text-xs text-purple-800 font-medium mb-2">📋 Evidence from Source:</p>
-                                  {result.evidence.matching_conditions && result.evidence.matching_conditions.length > 0 && (
-                                    <div className="mb-2">
-                                      <p className="text-xs text-purple-700 font-medium">Matching Conditions:</p>
-                                      {result.evidence.matching_conditions.map((condition: string, idx: number) => (
-                                        <p key={idx} className="text-xs text-purple-600">• {condition}</p>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {result.evidence.mismatching_conditions && result.evidence.mismatching_conditions.length > 0 && (
-                                    <div className="mb-2">
-                                      <p className="text-xs text-purple-700 font-medium">Mismatching Conditions:</p>
-                                      {result.evidence.mismatching_conditions.map((condition: string, idx: number) => (
-                                        <p key={idx} className="text-xs text-purple-600">• {condition}</p>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {result.evidence.unknown_requirements && result.evidence.unknown_requirements.length > 0 && (
-                                    <div>
-                                      <p className="text-xs text-purple-700 font-medium">Unknown Requirements:</p>
-                                      <p className="text-xs text-purple-600">{result.evidence.unknown_requirements.join(", ")}</p>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                              
                             </div>
                           </div>
 

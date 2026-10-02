@@ -7,3 +7,5 @@ node_modules/
 __pycache__/
 venv/
 *.pyc
+*.log
+backend.log

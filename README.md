@@ -4,17 +4,17 @@
 
 ## 📋 Overview
 
-EligibAI is an AI-powered scholarship discovery and eligibility assistant designed primarily for Indian college students. The system uses real-time web search (Tavily) to discover relevant scholarships from government portals and reliable sources, then presents results with clear eligibility information and direct application links.
+EligibAI is an AI-powered scholarship discovery and eligibility assistant designed primarily for Indian college students. The system uses real-time web search (Tavily) to discover relevant scholarships from government portals and reliable sources, then uses LLM-based extraction and eligibility checking to filter results based on the student's profile.
 
-**Current Architecture:** Real-time Web Search → Backend Processing → Frontend Display
+**Current Architecture:** Real-time Web Search → Tavily Extract → LLM Extraction → Eligibility Checking → Frontend Display
 
-**Removed Components:** RAG/Qdrant, QLoRA fine-tuning, LangGraph orchestration (simplified to direct API endpoints)
+**Active Components:** Tavily Search, Tavily Extract, Gemini/OpenAI LLM, Eligibility Engine, LangGraph Orchestration
 
 ---
 
 ## 🏗️ System Architecture
 
-### Current Simplified Architecture
+### Current Full Pipeline Architecture
 
 ```
 USER (Browser)
@@ -25,28 +25,24 @@ Next.js Frontend (React + TypeScript + Tailwind)
     ▼ POST /api/tavily/orchestrate
 FastAPI Backend (Python)
     │
-    ├── Tavily Search Service
-    │   ├── Query Enhancement (adds state, category, course context)
-    │   ├── Domain Filtering (official vs reliable sources)
-    │   └── Result Categorization
-    │
-    ├── Quality Filters
-    │   ├── Navigation menu removal
-    │   ├── Markdown/table syntax removal
-    │   ├── Old date filtering (pre-2026)
-    │   ├── Low-quality domain blocking
-    │   └── Garbage pattern detection
+    ├── LangGraph Orchestration
+    │   ├── Query Analysis
+    │   ├── Tavily Search
+    │   ├── Tavily Extract
+    │   ├── LLM Extraction (Gemini/OpenAI)
+    │   ├── Eligibility Checking
+    │   └── Evidence Generation
     │
     └── Response Transformation
-        ├── Raw Tavily results
-        ├── Metadata enrichment
+        ├── Structured scholarship data
+        ├── Field-by-field eligibility comparison
         └── JSON response
     │
     ▼
 Frontend Display
     ├── Source badges (Official/Reliable)
-    ├── Scholarship cards
-    ├── Portal disclaimer
+    ├── Scholarship cards with eligibility status
+    ├── Field-by-field comparison
     └── Apply buttons
 ```
 
@@ -55,9 +51,11 @@ Frontend Display
 1. **User Input:** Student fills profile (state, category, course, income, etc.)
 2. **Query Construction:** Backend enhances query with profile context
 3. **Tavily Search:** Real-time web search for scholarships
-4. **Quality Filtering:** Removes garbage, navigation, old content
-5. **Response:** Clean, current scholarship results
-6. **Display:** Frontend shows results with source badges and apply links
+4. **Tavily Extract:** Extracts full page content from scholarship URLs
+5. **LLM Extraction:** Gemini/OpenAI extracts structured scholarship data (name, eligibility criteria, benefits, deadlines)
+6. **Eligibility Checking:** Engine compares user profile against scholarship requirements
+7. **Evidence Generation:** Generates field-by-field comparison with MATCH/MISMATCH/NOT_SPECIFIED status
+8. **Display:** Frontend shows results with eligibility status and apply links
 
 ---
 
@@ -68,9 +66,9 @@ Frontend Display
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | **Next.js** | 16.3.5 | React framework with App Router |
-| **React** | Latest | UI library |
+| **React** | 19.2.8 | UI library |
 | **TypeScript** | Latest | Type safety |
-| **Tailwind CSS** | Latest | Styling |
+| **Tailwind CSS** | v4 | Styling |
 | **Lucide React** | Latest | Icons |
 
 ### Backend
@@ -82,13 +80,17 @@ Frontend Display
 | **Uvicorn** | Latest | ASGI server |
 | **Pydantic** | v2 | Data validation |
 | **pydantic-settings** | Latest | Configuration management |
+| **LangChain** | Latest | LLM framework |
+| **LangGraph** | Latest | Orchestration framework |
 
 ### External APIs
 
 | Service | Purpose |
 |---------|---------|
 | **Tavily Search** | Real-time web search for scholarships |
-| **Tavily Extract** | Content extraction from URLs (currently unused) |
+| **Tavily Extract** | Content extraction from URLs |
+| **Google Gemini** | LLM for structured data extraction (primary) |
+| **OpenAI** | LLM fallback for extraction (secondary) |
 
 ### Database
 
@@ -96,6 +98,7 @@ Frontend Display
 |------------|--------|---------|
 | **PostgreSQL** | Optional | Scholarship persistence (currently disabled) |
 | **SQLAlchemy** | Available | ORM (available but not actively used) |
+| **Redis** | Available | Caching (available but not actively used) |
 
 ### Development Tools
 
@@ -145,22 +148,19 @@ eligiblAI/
 │   │   │   ├── __init__.py
 │   │   │   ├── tavily_search.py      # Tavily search service
 │   │   │   ├── tavily_extract.py     # Tavily extract service
-│   │   │   ├── llm_extraction.py     # LLM extraction (mock mode)
+│   │   │   ├── llm_extraction.py     # LLM extraction service (orchestrator)
 │   │   │   ├── llm_extraction_mock.py    # Mock extraction fallback
-│   │   │   ├── llm_extraction_gemini.py   # Gemini extraction (inactive)
-│   │   │   ├── eligibility_engine_v2.py   # Eligibility engine (inactive)
+│   │   │   ├── llm_extraction_gemini.py   # Gemini extraction
+│   │   │   ├── eligibility_engine_v2.py   # Eligibility engine (ACTIVE)
 │   │   │   └── database.py          # Database service (inactive)
 │   │   ├── agents/
 │   │   │   ├── __init__.py
-│   │   │   ├── scholarship_agent.py     # LangGraph agent (inactive)
-│   │   │   └── scholarship_orchestrator.py  # Orchestrator (inactive)
+│   │   │   ├── scholarship_agent.py     # LangGraph agent
+│   │   │   └── scholarship_orchestrator.py  # LangGraph orchestrator (ACTIVE)
 │   │   └── api/
 │   │       ├── __init__.py
 │   │       ├── routes.py              # Main routes
-│   │       ├── routes_tavily.py      # Tavily endpoints (ACTIVE)
-│   │       ├── routes_finetuning.py  # Fine-tuning endpoints (inactive)
-│   │       ├── routes_evaluation.py   # Evaluation endpoints (inactive)
-│   │       └── routes_websearch.py    # Web search endpoints (inactive)
+│   │       └── routes_tavily.py      # Tavily endpoints (ACTIVE)
 │   ├── data/
 │   │   └── scholarships.json          # Static scholarship data (unused)
 │   ├── main.py                       # Uvicorn entry point
@@ -182,6 +182,7 @@ eligiblAI/
 │
 ├── docker-compose.yml                # Development Docker Compose
 ├── docker-compose.prod.yml           # Production Docker Compose
+├── EC2_DEPLOYMENT_FIXES.md           # EC2 deployment guide
 │
 ├── .dockerignore                     # Docker ignore patterns
 ├── .gitignore                        # Git ignore patterns
@@ -194,15 +195,37 @@ eligiblAI/
 
 ## 🔑 Key Components
 
-### 1. Tavily Search Service (`backend/app/services/tavily_search.py`)
+### 1. LangGraph Orchestrator (`backend/app/agents/scholarship_orchestrator.py`)
+
+**Purpose:** Manages the complete scholarship discovery pipeline
+
+**Pipeline Stages:**
+1. Query Analysis - Enhances query with profile context
+2. Tavily Search - Finds scholarship URLs
+3. Tavily Extract - Extracts full page content
+4. LLM Extraction - Uses Gemini/OpenAI to extract structured data
+5. Database Storage - Saves scholarships (optional, currently disabled)
+6. Eligibility Checking - Compares user profile against requirements
+7. Evidence Generation - Generates field-by-field comparison
+
+**Fallback Chain:**
+- Gemini (primary) → OpenAI (secondary) → Mock (last resort)
+
+### 2. Tavily Search Service (`backend/app/services/tavily_search.py`)
 
 **Purpose:** Real-time web search for scholarships
 
 **Key Features:**
 - Query enhancement with profile context (state, category, course)
-- Official domain filtering (scholarships.gov.in, ePASS portals, etc.)
+- Domain filtering (excludes social media, dictionaries, encyclopedias)
+- Official domain prioritization (scholarships.gov.in, ePASS portals, etc.)
 - Result categorization (official vs reliable sources)
-- Configurable result limits
+
+**Excluded Domains:**
+- Social media: facebook.com, instagram.com, youtube.com, twitter.com, x.com, tiktok.com, linkedin.com
+- Dictionaries: merriam-webster.com, wiktionary.org
+- Encyclopedias: wikipedia.org, wikivoyage.org, britannica.com
+- Other: findagrave.com, salemgastro.com, cityofsalem.net
 
 **Official Domains:**
 - scholarships.gov.in (National Scholarship Portal)
@@ -214,60 +237,67 @@ eligiblAI/
 - www.education.gov.in (Ministry of Education)
 - www.socialjustice.gov.in (Social Justice Ministry)
 
-**API Endpoint:**
-```python
-def search_scholarships(query: str, profile: dict, max_results: int)
-```
+### 3. LLM Extraction Service (`backend/app/services/llm_extraction.py`)
 
-### 2. Quality Filters (`backend/app/api/routes_tavily.py`)
+**Purpose:** Extract structured scholarship data using LLM
 
-**Purpose:** Remove low-quality and irrelevant results
+**Providers:**
+1. **Gemini (Primary):** Google Gemini API (gemini-3.6-flash)
+2. **OpenAI (Secondary):** GPT-4o-mini if Gemini unavailable
+3. **Mock (Fallback):** Regex-based extraction when LLMs unavailable
 
-**Filter Categories:**
+**Extracted Fields:**
+- Scholarship name
+- Provider
+- State
+- Category (SC, ST, OBC, General, etc.)
+- Course (B.Tech, B.Sc, MBA, etc.)
+- Income limit (min/max)
+- Benefits
+- Deadline
+- Eligibility criteria
+- Evidence snippets
 
-1. **Navigation Menu Removal:**
-   - "Menu", "About Us", "Contact Us", "Site Map"
-   - "Dashboard Login", "RTI Manual", "Privacy Policy"
-   - "Copyright", "All rights reserved"
+### 4. Eligibility Engine v2 (`backend/app/services/eligibility_engine_v2.py`)
 
-2. **Markdown/Table Syntax Removal:**
-   - `##`, `###`, `#`, `|`, `---`
-   - "Also Check", "FAQs", "Ques", "Ans"
-   - "[PDF]" labels
+**Purpose:** Compare user profile against scholarship requirements
 
-3. **Image/Garbage Removal:**
-   - "Image 1:", "Image 2:", etc.
-   - "OTR registration", "One Time Registration"
-   - URL paths: "/en/", "/fresh/", "/public/"
+**Comparisons:**
+- Education (course, level)
+- Income (against limits)
+- Category (SC, ST, OBC, General, etc.)
+- State (state residency)
+- Age (age limits)
+- Gender (male/female/other)
+- Disability (disability required)
+- Year of study
 
-4. **Date Filtering:**
-   - Blocks 2020, 2021, 2022, 2023, 2024, 2025
-   - Only shows 2026 results
+**Status Types:**
+- **MATCH:** User meets requirement
+- **MISMATCH:** User does not meet requirement
+- **NOT_SPECIFIED:** Requirement not specified in scholarship
 
-5. **Low-Quality Domain Blocking:**
-   - rssing.com, noticebard.com, theglobalscholarship.org
-   - quora.com, shiksha.com, collegedunia.com
-   - manabadi.co.in, saitm.ac.in
+**Overall Eligibility:**
+- **ELIGIBLE:** All requirements match
+- **POTENTIALLY_ELIGIBLE:** Some requirements not specified
+- **NOT_ELIGIBLE:** One or more requirements mismatch
+- **NEEDS_MORE_INFORMATION:** Insufficient information
 
-6. **Scholarship Content Validation:**
-   - Must contain scholarship-related keywords
-   - Minimum length requirements
-   - No obvious garbage patterns
-
-### 3. Simplified Orchestration Endpoint (`backend/app/api/routes_tavily.py`)
+### 5. API Endpoint (`backend/app/api/routes_tavily.py`)
 
 **Endpoint:** `POST /api/tavily/orchestrate`
 
 **Request Body:**
 ```json
 {
-  "query": "find all the scholarships im eligible for",
+  "query": "Telangana ST B.Tech scholarship eligibility application",
   "profile": {
-    "state": "Karnataka",
-    "category": "SC",
+    "state": "Telangana",
+    "category": "ST",
     "course": "B.Tech",
-    "year": "1st Year",
-    "annualIncome": 6000000
+    "yearOfStudy": "1st Year",
+    "annualFamilyIncome": "100000",
+    "disabilityStatus": "No"
   },
   "max_results": 20
 }
@@ -277,45 +307,34 @@ def search_scholarships(query: str, profile: dict, max_results: int)
 ```json
 {
   "success": true,
-  "query": "find all the scholarships im eligible for",
+  "query": "Telangana ST B.Tech scholarship eligibility application",
   "results": [
     {
-      "scholarship_name": "Post-Matric Scholarship",
+      "scholarship_name": "Post-Matric Scholarship for SC Students",
       "provider": "National Scholarship Portal",
       "benefits": "Financial assistance for education...",
       "deadline": "Visit source for deadline",
       "source_url": "https://scholarships.gov.in/...",
-      "is_official": true,
       "eligibility": {
-        "overall_status": "NEEDS_MORE_INFORMATION",
-        "explanation": "Visit source for eligibility details"
+        "overall_status": "NOT_ELIGIBLE",
+        "explanation": "Not eligible due to 1 mismatching requirement(s)",
+        "field_comparisons": [
+          {
+            "field": "category",
+            "status": "MISMATCH",
+            "reason": "Category mismatch. Required: SC, Your category: ST"
+          }
+        ]
       }
     }
   ],
   "pipeline_summary": {
     "search_results": 20,
-    "extraction_skipped": true,
-    "using_raw_search": true
+    "extraction_skipped": false,
+    "using_raw_search": false
   }
 }
 ```
-
-### 4. Frontend Profile Form (`frontend/src/components/UserProfileForm.tsx`)
-
-**Features:**
-- Student profile input (personal, education, financial)
-- Real-time search with loading progress bar (0-100%)
-- Quality filtering on frontend
-- Source badge display (Official/Reliable)
-- Portal availability disclaimer
-- Clean card-based UI
-
-**Key Components:**
-- Form state management with React hooks
-- Loading animation with progress bar
-- API integration with FastAPI backend
-- Responsive design with Tailwind CSS
-- Garbage pattern filtering (frontend layer)
 
 ---
 
@@ -332,42 +351,50 @@ def search_scholarships(query: str, profile: dict, max_results: int)
    ├── Income: Annual family income
    └── Disability: Yes/No
 
-2. QUERY ENHANCEMENT
-   ├── Append state to query
-   ├── Append category to query
-   ├── Append course to query
-   └── Append year to query
-   Example: "Karnataka state SC category B.Tech course 1st Year"
+2. QUERY ANALYSIS
+   ├── Parse user query
+   ├── Add profile context
+   └── Generate search keywords
 
 3. TAVILY SEARCH
    ├── API call to Tavily Search
    ├── Multiplier: max_results * 4 (for breadth)
-   ├── Raw results: 40-80 results
+   ├── Domain filtering (exclude social media, dictionaries)
+   ├── Raw results: 20-80 results
    └── Return titles, snippets, URLs, sources
 
-4. QUALITY FILTERING (Backend)
-   ├── Remove navigation menu text
-   ├── Remove markdown/table syntax
-   ├── Remove image references
-   ├── Remove old dates (pre-2026)
-   ├── Block low-quality domains
-   ├── Validate scholarship content
-   └── Final results: 5-20 scholarships
+4. TAVILY EXTRACT
+   ├── Extract full page content from URLs
+   ├── Limit to top 5-10 results
+   └── Return structured content
 
-5. RESPONSE TRANSFORMATION
-   ├── Add metadata (official/reliable)
-   ├── Structure JSON response
-   └── Return to frontend
+5. LLM EXTRACTION
+   ├── Use Gemini (primary) or OpenAI (secondary)
+   ├── Extract structured data:
+   │   ├── Scholarship name
+   │   ├── Provider
+   │   ├── Eligibility criteria (category, state, income, course, etc.)
+   │   ├── Benefits
+   │   ├── Deadline
+   │   └── Evidence snippets
+   └── Fallback to mock if LLM unavailable
 
-6. FRONTEND FILTERING
-   ├── Additional garbage pattern checks
-   ├── Length validation
-   └── Display preparation
+6. ELIGIBILITY CHECKING
+   ├── Compare user profile against scholarship requirements
+   ├── Field-by-field comparison
+   ├── Determine overall status (ELIGIBLE/NOT_ELIGIBLE/POTENTIALLY_ELIGIBLE)
+   └── Generate explanation
 
-7. UI DISPLAY
-   ├── Source badges
-   ├── Scholarship cards
-   ├── Portal disclaimer
+7. EVIDENCE GENERATION
+   ├── Combine scholarship data with eligibility results
+   ├── Add source badges
+   └── Return structured response
+
+8. FRONTEND DISPLAY
+   ├── Source badges (Official/Reliable)
+   ├── Scholarship cards with eligibility status
+   ├── Field-by-field comparison
+   ├── Matching/Mismatching conditions
    └── Apply buttons
 ```
 
@@ -378,7 +405,7 @@ def search_scholarships(query: str, profile: dict, max_results: int)
 ### Active Endpoints
 
 #### `/api/tavily/orchestrate` (POST)
-**Purpose:** Main search endpoint
+**Purpose:** Main orchestration endpoint with full pipeline
 
 **Request:**
 ```json
@@ -388,8 +415,8 @@ def search_scholarships(query: str, profile: dict, max_results: int)
     "state": "Karnataka",
     "category": "SC",
     "course": "B.Tech",
-    "year": "1st Year",
-    "annualIncome": 6000000
+    "yearOfStudy": "1st Year",
+    "annualFamilyIncome": "600000"
   },
   "max_results": 20
 }
@@ -403,8 +430,8 @@ def search_scholarships(query: str, profile: dict, max_results: int)
   "results": [...],
   "pipeline_summary": {
     "search_results": 20,
-    "extraction_skipped": true,
-    "using_raw_search": true
+    "extraction_skipped": false,
+    "using_raw_search": false
   }
 }
 ```
@@ -413,18 +440,10 @@ def search_scholarships(query: str, profile: dict, max_results: int)
 **Purpose:** Test Tavily search directly
 
 #### `/api/tavily/test-extraction` (POST)
-**Purpose:** Test extraction (currently inactive)
+**Purpose:** Test LLM extraction directly
 
-### Inactive Endpoints (Architecture Simplified)
-
-The following endpoints exist in codebase but are not actively used:
-
-- `/api/eligibility` - Eligibility checking (static dataset, inactive)
-- `/api/search` - RAG search (RAG removed, inactive)
-- `/api/agent` - LangGraph agent (simplified, inactive)
-- `/api/finetuning/*` - QLoRA fine-tuning (removed, inactive)
-- `/api/evaluation/*` - RAGAS evaluation (removed, inactive)
-- `/api/websearch/*` - Web search endpoints (consolidated into Tavily, inactive)
+#### `/health` (GET)
+**Purpose:** Health check endpoint
 
 ---
 
@@ -443,7 +462,7 @@ BACKEND_PORT=8000
 # Database (Optional - currently disabled)
 DATABASE_URL=postgresql://user:password@localhost:5432/eligibai
 
-# LLM APIs (Optional - currently using mock mode)
+# LLM APIs
 GEMINI_API_KEY=your_gemini_api_key_here
 OPENAI_API_KEY=your_openai_api_key_here
 
@@ -480,6 +499,8 @@ sqlalchemy>=2.0.0
 psycopg2-binary>=2.9.0
 langchain>=0.1.0
 langgraph>=0.0.0
+google-genai>=0.1.0
+openai>=1.0.0
 ```
 
 ### Frontend (`package.json`)
@@ -488,8 +509,8 @@ langgraph>=0.0.0
 {
   "dependencies": {
     "next": "16.3.5",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "typescript": "^5.0.0",
     "tailwindcss": "^3.3.0",
     "lucide-react": "^0.300.0"
@@ -503,9 +524,10 @@ langgraph>=0.0.0
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js (v20 or higher)
 - Python (v3.9 or higher)
 - Tavily API key
+- Gemini API key (recommended) or OpenAI API key
 
 ### Local Development Setup
 
@@ -529,7 +551,9 @@ pip install -r requirements.txt
 # Copy environment file
 cp .env.example .env
 
-# Edit .env and add your TAVILY_API_KEY
+# Edit .env and add your API keys:
+# TAVILY_API_KEY=your_tavily_api_key
+# GEMINI_API_KEY=your_gemini_api_key
 
 # Run backend
 python main.py
@@ -573,41 +597,47 @@ docker-compose up -d
    - Tavily API for live scholarship discovery
    - Query enhancement with profile context
    - Multi-source search (government portals + reliable aggregators)
+   - Domain filtering (excludes social media, dictionaries)
 
-2. **Quality Filtering**
-   - Navigation menu removal
-   - Markdown/table syntax removal
-   - Old date filtering (pre-2026)
-   - Low-quality domain blocking
-   - Garbage pattern detection
+2. **LLM-Based Extraction**
+   - Gemini (primary) or OpenAI (secondary) for structured data extraction
+   - Extracts eligibility criteria, benefits, deadlines
+   - Evidence snippets for verification
+   - Mock fallback when LLMs unavailable
 
-3. **Source Classification**
-   - Official government portals (green badge)
-   - Reliable aggregators (blue badge)
-   - Clear visual distinction
+3. **Eligibility Checking**
+   - Field-by-field comparison (category, state, income, course, etc.)
+   - MATCH/MISMATCH/NOT_SPECIFIED status for each field
+   - Overall eligibility status (ELIGIBLE/NOT_ELIGIBLE/POTENTIALLY_ELIGIBLE)
+   - Detailed explanations
 
-4. **User-Friendly UI**
+4. **LangGraph Orchestration**
+   - Complete pipeline management
+   - Sequential workflow
+   - Error handling and fallbacks
+   - State management
+
+5. **User-Friendly UI**
    - Clean card-based design
    - Loading progress bar (0-100%)
+   - Source badge display (Official/Reliable)
+   - Field-by-field comparison display
    - Portal availability disclaimer
    - Direct apply buttons
 
-5. **Profile-Based Search**
+6. **Profile-Based Search**
    - State-specific results
    - Category-specific results
    - Course-specific results
    - Income-based context
 
-### Removed Features (Architecture Simplified)
+### Known Limitations
 
-- ❌ RAG with Qdrant vector database
-- ❌ QLoRA fine-tuning
-- ❌ LangGraph orchestration
-- ❌ Eligibility rule engine (static dataset)
-- ❌ LLM extraction (currently using mock mode)
-- ❌ Database persistence (PostgreSQL disabled)
-- ❌ Change detection and monitoring
-- ❌ Evaluation framework (RAGAS)
+- **Gemini Free Tier:** 20 requests/day limit (can be upgraded)
+- **Mock Extraction:** Less accurate when LLMs unavailable
+- **No Database Persistence:** Scholarships not saved (PostgreSQL optional)
+- **No Caching:** Repeated searches make fresh API calls
+- **Single API Dependency:** Relies on Tavily Search
 
 ---
 
@@ -656,70 +686,79 @@ docker-compose up -d
 ### Reliable Aggregators (Non-Official)
 
 1. **Buddy4Study** - Scholarship information platform
-2. **Propelld** - Education financing platform
-3. **Indiascholarships** - Scholarship directory
+2. **Indiascholarships** - Scholarship directory
 
 ---
 
-## 🔍 Quality Filter Details
+## 🔐 Security Considerations
 
-### Backend Filters (Python)
+### Current Security Measures
 
-**File:** `backend/app/api/routes_tavily.py`
+- API keys stored in environment variables
+- CORS configured (all origins for development)
+- Input validation with Pydantic
+- Error handling without exposing sensitive data
 
-**Navigation Keywords:**
-```python
-navigation_keywords = [
-    "Menu", "About Us", "Contact Us", "Site Map", "RTI Manual",
-    "Dashboard Login", "Login", "logo", "A+;)", "A;)", "A-;)",
-    "Schemes & Policies", "Awards", "Link", "Footer", "Privacy Policy",
-    "Terms of Service", "Copyright", "All rights reserved",
-    "Rising-2047", "tg rising", "ts logo", "Official Login",
-    "Dashboard", "RSSing", "chan-", "all_p2",
-    "Image 1:", "Image 2:", "Image 3:", "Image 4:", "Image 5:",
-    "Image", "OTR registration", "One Time Registration",
-    "/en/", "/fresh/", "/public/", "/scheme", "0-", "-0",
-    "##", "###", "#", "|", "---", "Also Check", "FAQs", "Ques", "Ans",
-    "[PDF]", "Scheme Guidelines of Scheme", "General Overview",
-    "Salary for Freshers", "Steps to Apply", "Top"
-]
-```
+### Production Security Recommendations
 
-**Low-Quality Domains:**
-```python
-low_quality_domains = [
-    "rssing.com", "noticebard.com", "theglobalscholarship.org", "quora.com",
-    "shiksha.com", "collegedunia.com", "manabadi.co.in", "saitm.ac.in"
-]
-```
+- Use environment-specific API keys
+- Restrict CORS to specific origins
+- Add rate limiting
+- Implement authentication/authorization
+- Use HTTPS with SSL certificates
+- Regularly rotate API keys
+- Monitor API usage and costs
 
-**Old Years:**
-```python
-old_years = ["2020", "2021", "2022", "2023", "2024", "2025"]
-```
+---
 
-**Scholarship Keywords:**
-```python
-scholarship_keywords = [
-    "scholarship", "grant", "fellowship", "financial aid",
-    "reimbursement", "fee", "eligible", "eligibility",
-    "income", "students", "education"
-]
-```
+## 🚀 Deployment
 
-### Frontend Filters (TypeScript)
+### Local Development
 
-**File:** `frontend/src/components/UserProfileForm.tsx`
+- Frontend: Next.js dev server on port 3000
+- Backend: Uvicorn on port 8000
 
-**Garbage Patterns:**
-```typescript
-const garbagePatterns = [
-  "image 1:", "image 2:", "image 3:", "image 4:", "image 5:",
-  "otr registration", "one time registration",
-  "/en/", "/fresh/", "/public/", "/scheme",
-  "0-", "-0", "may 17, 2022", "2022", "2023", "2024", "2025"
-];
-```
+### Docker Deployment
+
+- Frontend: Docker container on port 3000
+- Backend: Docker container on port 8000
+
+### AWS EC2 Deployment
+
+See `EC2_DEPLOYMENT_FIXES.md` for detailed deployment instructions.
+
+**Current EC2 Setup:**
+- Instance: t3.micro (Amazon Linux 2023)
+- Public IP: 13.62.229.119
+- Frontend: Docker container (port 3000)
+- Backend: Direct Python execution (port 8000)
+- EBS Volume: 8GB
+
+---
+
+## 📝 Troubleshooting
+
+### Common Issues
+
+1. **Gemini 429 Error (Quota Exceeded)**
+   - Free tier: 20 requests/day limit
+   - Solution: Wait for quota reset or upgrade to paid plan
+   - Fallback: System uses mock extraction
+
+2. **Frontend Shows "Failed to Fetch"**
+   - Check if backend is running
+   - Check CORS configuration
+   - Verify API URL
+
+3. **No Results Returned**
+   - Check Tavily API key
+   - Check search query
+   - Verify domain filtering
+
+4. **Eligibility Not Matching**
+   - Mock extraction limitations (use real LLM)
+   - Check profile data accuracy
+   - Verify extraction quality
 
 ---
 
@@ -755,393 +794,39 @@ const garbagePatterns = [
 5. **Scholarship Card**
    - Source badge (Official/Reliable)
    - Scholarship title
-   - Description/benefits
+   - Eligibility status (ELIGIBLE/NOT_ELIGIBLE/POTENTIALLY_ELIGIBLE)
+   - Field-by-field comparison
    - Apply button
-
----
-
-## 📝 Interview Preparation Topics
-
-### Architecture & Design
-
-1. **Why simplify from RAG to Tavily-only?**
-   - RAG complexity vs reliability
-   - Real-time data freshness
-   - Maintenance overhead
-   - User experience focus
-
-2. **Why multiple filtering layers?**
-   - Defense in depth
-   - Backend filters (Python) for server-side quality
-   - Frontend filters (TypeScript) for user experience
-   - Network bandwidth optimization
-
-3. **Why remove LangGraph orchestration?**
-   - Complexity vs value
-   - Direct API endpoints simpler
-   - Easier debugging
-   - Faster response times
-
-### Technical Implementation
-
-1. **Tavily Search Integration**
-   - API authentication
-   - Query enhancement strategies
-   - Rate limiting considerations
-   - Error handling
-
-2. **Quality Filtering Strategies**
-   - Pattern matching
-   - Domain blacklisting
-   - Date validation
-   - Content validation
-
-3. **Frontend State Management**
-   - React hooks (useState, useEffect)
-   - Form handling
-   - Loading states
-   - Error handling
-
-### Scalability Considerations
-
-1. **Current Limitations**
-   - No database persistence
-   - No caching
-   - Single API dependency (Tavily)
-   - No load balancing
-
-2. **Future Improvements**
-   - Redis caching for queries
-   - PostgreSQL for history
-   - Rate limiting
-   - Load balancing with Nginx
-   - CDN for static assets
-
-### API Design
-
-1. **RESTful Principles**
-   - POST for search (query in body)
-   - JSON request/response
-   - Clear error messages
-   - Structured responses
-
-2. **Error Handling**
-   - Try-catch blocks
-   - Graceful degradation
-   - User-friendly error messages
-   - Logging for debugging
-
----
-
-## 🔐 Security Considerations
-
-### Current Security Measures
-
-1. **API Key Management**
-   - Environment variables
-   - .env files not committed
-   - .env.example provided
-
-2. **CORS Configuration**
-   - Frontend-backend communication
-   - Allowed origins configured
-
-3. **Input Validation**
-   - Pydantic models for backend
-   - TypeScript types for frontend
-   - Length limits on inputs
-
-### Future Security Improvements
-
-1. **API Rate Limiting**
-   - Prevent abuse
-   - Protect Tavily quota
-
-2. **Authentication**
-   - User accounts
-   - JWT tokens
-   - Protected routes
-
-3. **HTTPS**
-   - SSL certificates
-   - Secure communication
-
----
-
-## 📈 Performance Optimization
-
-### Current Optimizations
-
-1. **Frontend**
-   - React fast refresh
-   - Tailwind CSS (JIT)
-   - Lazy loading components
-
-2. **Backend**
-   - Async/await for I/O
-   - Connection pooling (if DB used)
-   - Efficient filtering
-
-### Future Optimizations
-
-1. **Caching**
-   - Redis for common queries
-   - Browser caching
-   - CDN for static assets
-
-2. **Database**
-   - Query optimization
-   - Indexing
-   - Connection pooling
-
-3. **API**
-   - Response compression
-   - Pagination
-   - Batch requests
-
----
-
-## 🧪 Testing
-
-### Manual Testing Checklist
-
-1. **Frontend**
-   - Form submission
-   - Loading animation
-   - Results display
-   - Responsive design
-
-2. **Backend**
-   - API endpoint response
-   - Quality filtering
-   - Error handling
-   - Logging
-
-3. **Integration**
-   - Frontend-backend communication
-   - Tavily API integration
-   - End-to-end flow
-
-### Future Testing
-
-1. **Unit Tests**
-   - Jest for frontend
-   - Pytest for backend
-
-2. **Integration Tests**
-   - API testing
-   - End-to-end testing
-
-3. **E2E Tests**
-   - Playwright or Cypress
-   - User flow testing
-
----
-
-## 🚢 Deployment
-
-### Current Deployment
-
-- Local development with Docker Compose
-- Manual backend and frontend startup
-
-### Production Deployment (Planned)
-
-1. **AWS Infrastructure**
-   - ECS for container orchestration
-   - RDS for PostgreSQL (if needed)
-   - ALB for load balancing
-   - Route 53 for DNS
-
-2. **CI/CD Pipeline**
-   - GitHub Actions
-   - Automated testing
-   - Automated deployment
-
-3. **Monitoring**
-   - CloudWatch for logs
-   - Application performance monitoring
-   - Error tracking
-
----
-
-## 📚 Learning Resources
-
-### Technologies Used
-
-1. **Next.js**
-   - Documentation: nextjs.org/docs
-   - App Router: nextjs.org/docs/app
-
-2. **FastAPI**
-   - Documentation: fastapi.tiangolo.com
-   - Tutorial: fastapi.tiangolo.com/tutorial
-
-3. **Tavily**
-   - Documentation: docs.tavily.com
-   - API Reference: docs.tavily.com/docs/api
-
-4. **Tailwind CSS**
-   - Documentation: tailwindcss.com/docs
-   - Cheatsheet: tailwindcss.com/docs/installation
 
 ---
 
 ## 🤝 Contributing
 
-### Development Guidelines
+Contributions are welcome! Please follow these guidelines:
 
-1. **Code Style**
-   - Prettier for frontend
-   - Black for backend
-   - Type hints for Python
-   - TypeScript for frontend
-
-2. **Commit Messages**
-   - Conventional commits
-   - Clear descriptions
-   - Reference issues
-
-3. **Code Review**
-   - Peer review required
-   - Automated tests pass
-   - Documentation updated
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
 ---
 
 ## 📄 License
 
-MIT License
+This project is licensed under the MIT License.
 
 ---
 
-## 📞 Contact
+## 📞 Support
 
-For questions or support, please refer to the project repository.
-
----
-
-## 🎓 Interview Questions & Answers
-
-### Q1: Why did you choose Tavily over building a custom web scraper?
-
-**Answer:** Tavily provides:
-- Reliable web search API
-- Built-in content extraction
-- Rate limiting and error handling
-- Reduced development time
-- Better result quality than custom scrapers
-- API-based approach is more maintainable
-
-### Q2: How do you handle government portal downtime?
-
-**Answer:** 
-- Added disclaimer in UI about portal availability
-- Multiple sources (not single point of failure)
-- Error handling with user-friendly messages
-- Suggest users try again later or visit directly
-
-### Q3: Why remove RAG and Qdrant?
-
-**Answer:**
-- Complexity vs value: RAG added complexity without clear benefit
-- Real-time search: Tavily provides current data without RAG
-- Maintenance: Simplified architecture easier to maintain
-- User experience: Faster response times, simpler pipeline
-
-### Q4: How do you ensure result quality?
-
-**Answer:**
-- Multi-layer filtering (backend + frontend)
-- Navigation menu removal
-- Markdown/table syntax removal
-- Old date filtering
-- Low-quality domain blocking
-- Scholarship content validation
-
-### Q5: What are the scalability challenges?
-
-**Answer:**
-- Single API dependency (Tavily)
-- No caching layer
-- No database persistence
-- No load balancing
-- Solutions: Redis caching, PostgreSQL, Nginx load balancer
-
-### Q6: How do you handle API rate limits?
-
-**Answer:**
-- Currently not implemented (Tavily has generous limits)
-- Future: Redis-based rate limiting
-- User accounts with quotas
-- Queue system for heavy loads
-
-### Q7: Why TypeScript for frontend?
-
-**Answer:**
-- Type safety
-- Better IDE support
-- Catch errors at compile time
-- Self-documenting code
-- Better refactoring
-
-### Q8: Why Pydantic v2 for backend?
-
-**Answer:**
-- Data validation
-- Automatic schema generation
-- Fast performance
-- Type hints
-- API documentation (FastAPI integration)
-
-### Q9: How do you handle state management in frontend?
-
-**Answer:**
-- React hooks (useState, useEffect)
-- Local component state
-- No global state (not needed for current scope)
-- Future: Redux/Zustand if complexity grows
-
-### Q10: What are the security considerations?
-
-**Answer:**
-- API keys in environment variables
-- CORS configuration
-- Input validation (Pydantic, TypeScript)
-- Future: Authentication, rate limiting, HTTPS
+For issues or questions, please open an issue on GitHub.
 
 ---
 
-## 🎯 Key Takeaways for Interviews
+## 🙏 Acknowledgments
 
-1. **Architecture Decision Making**
-   - Simplified architecture for maintainability
-   - Real-time data over cached data
-   - User experience over complex features
-
-2. **Technical Implementation**
-   - Quality filtering strategies
-   - API integration best practices
-   - Error handling patterns
-
-3. **Problem Solving**
-   - Garbage content removal
-   - Date validation
-   - Domain blocking
-
-4. **Future Improvements**
-   - Caching layer
-   - Database persistence
-   - Load balancing
-   - Authentication
-
-5. **Trade-offs**
-   - RAG removed for simplicity
-   - Mock extraction for reliability
-   - Multiple filtering layers for quality
-
----
-
-**Last Updated:** 2026
-**Version:** 2.0 (Simplified Architecture)
-**Status:** Production Ready (Local Development)
+- Tavily API for web search
+- Google Gemini for LLM extraction
+- OpenAI for LLM fallback
+- Next.js team for the framework
+- FastAPI team for the framework
